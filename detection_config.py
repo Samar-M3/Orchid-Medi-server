@@ -2,7 +2,7 @@ from __future__ import annotations
 
 DETECTION_CONFIG = {
     "scheduler": {
-        "rescan_interval_seconds": 120,
+        "rescan_interval_seconds": 10,
     },
     "role_permissions": {
         "viewer": ["login", "view"],
@@ -20,6 +20,10 @@ DETECTION_CONFIG = {
         ],
     },
     "rules": {
+        "single_data_access": {
+            "actions": ["view", "download"],
+            "severity": "medium",
+        },
         "bulk_data_access": {
             "window_minutes": 15,
             "actions": ["download", "export"],

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from models import Alert
 
@@ -18,7 +18,7 @@ class ResponseManager:
         if alert.severity == "high":
             target = alert.affected_user or alert.affected_device
             if target:
-                self.throttled_until[target] = datetime.utcnow() + timedelta(minutes=5)
+                self.throttled_until[target] = datetime.now(timezone.utc) + timedelta(minutes=5)
             return "throttle"
 
         if alert.severity == "medium":
@@ -37,12 +37,12 @@ class ResponseManager:
         return {
             "id": user_or_device,
             "isolated": user_or_device in self.isolated_devices,
-            "throttled": throttled_until is not None and throttled_until > datetime.utcnow(),
+            "throttled": throttled_until is not None and throttled_until > datetime.now(timezone.utc),
             "throttled_until": throttled_until.isoformat() if throttled_until else None,
         }
 
     def get_devices(self) -> dict:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         active_throttles = {
             key: value.isoformat()
             for key, value in self.throttled_until.items()

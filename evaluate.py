@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from detection_config import DETECTION_CONFIG
 from rules.access_outside_role import detect_access_outside_role
+from rules.single_data_access import detect_single_data_access
 from rules.bot_like_timing import detect_bot_like_timing
 from rules.bulk_data_access import detect_bulk_data_access
 from rules.endpoint_probing import detect_endpoint_probing
@@ -35,6 +36,16 @@ class DetectionEvaluator:
         results: list[SuspiciousActivity] = []
 
         immediate_rule_specs = [
+            (
+                "single_data_access",
+                detect_single_data_access(
+                    event,
+                    self.config["rules"]["single_data_access"],
+                ),
+                event.user_id,
+                event.ip,
+                event.timestamp,
+            ),
             (
                 "access_outside_role",
                 detect_access_outside_role(
@@ -97,7 +108,7 @@ class DetectionEvaluator:
         return results
 
     def run_scheduled_scan(self, now: datetime | None = None) -> list[SuspiciousActivity]:
-        scan_time = now or datetime.utcnow()
+        scan_time = now or datetime.now(timezone.utc)
         max_window = max(
             self.config["rules"]["bulk_data_access"]["window_minutes"],
             self.config["rules"]["scraping_pattern"]["window_minutes"],

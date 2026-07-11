@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
 
@@ -13,7 +13,7 @@ AccessAction = Literal["view", "edit", "download", "print", "export"]
 
 class Alert(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     source: AlertSource
     severity: AlertSeverity
     title: str

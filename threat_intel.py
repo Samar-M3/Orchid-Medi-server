@@ -5,7 +5,7 @@ import os
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from suspicious_store import get_cached_ip_reputation, save_cached_ip_reputation
 
@@ -16,7 +16,10 @@ def lookup_abuse_confidence_score(ip: str, cache_ttl_minutes: int) -> int | None
     cached = get_cached_ip_reputation(ip)
     if cached:
         checked_at = datetime.fromisoformat(cached["checked_at"])
-        if checked_at >= datetime.utcnow() - timedelta(minutes=cache_ttl_minutes):
+        if checked_at.tzinfo is None:
+            checked_at = checked_at.replace(tzinfo=timezone.utc)
+            
+        if checked_at >= datetime.now(timezone.utc) - timedelta(minutes=cache_ttl_minutes):
             return int(cached["abuse_confidence_score"])
 
     api_key = os.getenv("ABUSEIPDB_API_KEY")

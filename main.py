@@ -2,7 +2,7 @@ import asyncio
 import csv
 import io
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 from routes.files import router as files_router
@@ -334,6 +334,43 @@ async def devices() -> dict:
     return response_manager.get_devices()
 
 
+@app.get("/api/devices/all")
+async def list_all_devices() -> list[dict]:
+    """Return every user/device that has accessed files, with access stats and blocked status."""
+    with get_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                user_id,
+                ip,
+                user_agent,
+                COUNT(*) AS access_count,
+                MAX(timestamp) AS last_access,
+                SUM(CASE WHEN action = 'download' THEN 1 ELSE 0 END) AS download_count,
+                SUM(CASE WHEN action = 'view' THEN 1 ELSE 0 END) AS view_count
+            FROM events
+            WHERE action IN ('download', 'view')
+            GROUP BY user_id, ip
+            ORDER BY last_access DESC
+            """,
+        ).fetchall()
+
+    results = []
+    for row in rows:
+        uid = row["user_id"]
+        results.append({
+            "user_id": uid,
+            "ip": row["ip"],
+            "user_agent": row["user_agent"],
+            "access_count": row["access_count"],
+            "download_count": row["download_count"],
+            "view_count": row["view_count"],
+            "last_access": row["last_access"],
+            "isolated": uid in response_manager.isolated_devices,
+        })
+    return results
+
+
 @app.get("/status/{user_or_device}")
 async def status(user_or_device: str) -> dict:
     """Return the simulated response state for one user or device."""
@@ -351,6 +388,9 @@ async def isolate_device(device_id: str) -> dict:
 async def release_device(device_id: str) -> dict:
     """Release a manually or automatically isolated device."""
     response_manager.release_device(device_id)
+    # Also wipe their recent event history so they don't instantly trip rate limits again
+    from suspicious_store import clear_user_events
+    clear_user_events(device_id)
     return response_manager.get_status(device_id)
 
 
@@ -611,7 +651,7 @@ async def run_suspicious_scan_loop() -> None:
     interval = DETECTION_CONFIG["scheduler"]["rescan_interval_seconds"]
     while True:
         try:
-            detection_evaluator.run_scheduled_scan(datetime.utcnow())
+            detection_evaluator.run_scheduled_scan(datetime.now(timezone.utc))
         except Exception:
             # Keep the loop alive even if one scan iteration fails.
             pass

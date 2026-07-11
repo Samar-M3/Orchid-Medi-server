@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from alert_store import get_connection
 from suspicious_models import ActivityEvent, SuspiciousActivity
@@ -116,6 +116,15 @@ def get_recent_events(limit: int = 5000) -> list[ActivityEvent]:
             (limit,),
         ).fetchall()
     return [row_to_event(row) for row in reversed(rows)]
+
+
+def clear_user_events(user_id: str) -> None:
+    """Clear all recent activity events for a user to reset their session limit."""
+    with get_connection() as connection:
+        connection.execute(
+            "DELETE FROM events WHERE user_id = ?",
+            (user_id,)
+        )
 
 
 def get_events_between(start: datetime, end: datetime) -> list[ActivityEvent]:
@@ -288,7 +297,7 @@ def save_cached_ip_reputation(ip: str, score: int) -> None:
             INSERT OR REPLACE INTO malicious_ip_cache (ip, abuse_confidence_score, checked_at)
             VALUES (?, ?, ?)
             """,
-            (ip, score, datetime.utcnow().isoformat()),
+            (ip, score, datetime.now(timezone.utc).isoformat()),
         )
 
 
@@ -307,6 +316,14 @@ def get_cached_ip_reputation(ip: str) -> dict | None:
     }
 
 
+def _parse_aware(ts_str: str) -> datetime:
+    """Parse an ISO timestamp and ensure it is timezone-aware (UTC)."""
+    dt = datetime.fromisoformat(ts_str)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def row_to_event(row) -> ActivityEvent:
     return ActivityEvent(
         id=row["id"],
@@ -318,7 +335,7 @@ def row_to_event(row) -> ActivityEvent:
         ip=row["ip"],
         user_agent=row["user_agent"],
         status_code=row["status_code"],
-        timestamp=datetime.fromisoformat(row["timestamp"]),
+        timestamp=_parse_aware(row["timestamp"]),
     )
 
 
@@ -331,8 +348,8 @@ def row_to_suspicious(row) -> SuspiciousActivity:
         severity=row["severity"],
         details=json.loads(row["details"]),
         event_ids=json.loads(row["event_ids"]),
-        created_at=datetime.fromisoformat(row["created_at"]),
+        created_at=_parse_aware(row["created_at"]),
         status=row["status"],
-        window_start=datetime.fromisoformat(row["window_start"]) if row["window_start"] else None,
-        window_end=datetime.fromisoformat(row["window_end"]) if row["window_end"] else None,
+        window_start=_parse_aware(row["window_start"]) if row["window_start"] else None,
+        window_end=_parse_aware(row["window_end"]) if row["window_end"] else None,
     )

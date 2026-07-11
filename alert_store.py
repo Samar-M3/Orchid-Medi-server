@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from models import Alert, AccessLogEntry
@@ -110,7 +110,7 @@ def get_all_alerts(
 
 
 def get_alert_summary_24h() -> dict[str, dict[str, int]]:
-    cutoff = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     with get_connection() as connection:
         severity_rows = connection.execute(
             """
@@ -178,9 +178,13 @@ def row_to_alert(row: sqlite3.Row) -> Alert:
             details_val = json.loads(row["details"])
     except (IndexError, KeyError, sqlite3.OperationalError, json.JSONDecodeError):
         pass
+    dt = datetime.fromisoformat(row["timestamp"])
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+        
     return Alert(
         id=row["id"],
-        timestamp=datetime.fromisoformat(row["timestamp"]),
+        timestamp=dt,
         source=row["source"],
         severity=row["severity"],
         title=row["title"],

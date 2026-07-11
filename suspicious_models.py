@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from statistics import mean
 from typing import Literal
 from uuid import uuid4
@@ -34,7 +34,7 @@ class ActivityEvent(BaseModel):
     ip: str
     user_agent: str
     status_code: int
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class SuspiciousActivity(BaseModel):
@@ -45,7 +45,7 @@ class SuspiciousActivity(BaseModel):
     severity: SuspiciousSeverity
     details: dict
     event_ids: list[str]
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status: SuspiciousStatus = "open"
     window_start: datetime | None = None
     window_end: datetime | None = None
