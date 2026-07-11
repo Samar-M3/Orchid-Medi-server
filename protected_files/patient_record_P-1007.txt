@@ -1,0 +1,4 @@
+Patient ID: P-1007
+Name: Karma Lama
+Address: Solukhumbu
+Clinical note: High altitude headache resolved.

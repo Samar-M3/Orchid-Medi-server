@@ -1,0 +1,4 @@
+Patient ID: P-1005
+Name: Nabin Rai
+Address: Dharan
+Clinical note: Asthma symptoms controlled with inhaler.

@@ -1,0 +1,4 @@
+Patient ID: P-1002
+Name: Sita Tamang
+Address: Lalitpur
+Clinical note: Recovering from appendectomy. No infection signs.

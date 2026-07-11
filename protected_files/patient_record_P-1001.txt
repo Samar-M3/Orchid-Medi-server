@@ -1,0 +1,4 @@
+Patient ID: P-1001
+Name: Aarav Sharma
+Address: Kathmandu
+Clinical note: Blood pressure stable. Follow up in 30 days.

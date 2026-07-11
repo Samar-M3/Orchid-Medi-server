@@ -1,0 +1,4 @@
+Patient ID: P-1003
+Name: Bikash Gurung
+Address: Pokhara
+Clinical note: Diabetes review. Medication adherence good.

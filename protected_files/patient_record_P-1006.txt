@@ -1,0 +1,4 @@
+Patient ID: P-1006
+Name: Laxmi Magar
+Address: Butwal
+Clinical note: Fracture healing. Physiotherapy recommended.
