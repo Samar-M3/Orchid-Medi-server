@@ -1,0 +1,4 @@
+Patient ID: P-1010
+Name: Pratiksha Bista
+Address: Chitwan
+Clinical note: Routine pediatric visit. Vaccines updated.

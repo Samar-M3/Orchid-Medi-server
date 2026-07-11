@@ -1,0 +1,4 @@
+Patient ID: P-1004
+Name: Maya Shrestha
+Address: Bhaktapur
+Clinical note: Pregnancy checkup normal. Iron prescribed.

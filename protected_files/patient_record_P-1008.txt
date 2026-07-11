@@ -1,0 +1,4 @@
+Patient ID: P-1008
+Name: Anita Thapa
+Address: Biratnagar
+Clinical note: Cardiology consult. ECG normal.

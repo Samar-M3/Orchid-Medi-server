@@ -1,0 +1,4 @@
+Patient ID: P-1009
+Name: Ramesh Karki
+Address: Janakpur
+Clinical note: Fever improved. Lab results pending.
